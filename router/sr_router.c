@@ -307,8 +307,7 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
 		sr_send_packet(sr, nuICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
 	}
-    else
-		struct sr_if * inter_p = sr_get_interface(sr, inter);
+    struct sr_if* inter_p = sr_get_interface(sr, inter);
 
 
     ipHeader->ip_ttl -= 1;
@@ -321,8 +320,8 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
 		return;
     }
 
+	uint32_t receiverifip = ntohl(interface->ip);
     struct sr_arpentry* arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
-    uint32_t receiverifip = ntohl(interface->ip);
 
     if(arp_entry == NULL)
     {

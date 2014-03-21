@@ -187,7 +187,7 @@ uint8_t* createTICMPPacket(uint8_t* packet, unsigned char *srcHa,
   ipHdr->ip_sum =0;     
   ipHdr->ip_src =srcIP; 
   ipHdr->ip_dst =destIP;  
-  ipHdr->ip_sum =checkSum(ipHdr,20);
+  ipHdr->ip_sum =cksum(ipHdr,20);
   ipHdr->ip_hl = 5;
   ipHdr->ip_tos=0;     
   ipHdr->ip_len=htons(56);      
@@ -200,7 +200,7 @@ uint8_t* createTICMPPacket(uint8_t* packet, unsigned char *srcHa,
   icmpHdr->icmp_code=0;
   icmpHdr->next_mtu = htons(1500);
   memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
-  icmpHdr->icmp_sum = checkSum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
+  icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }
 
@@ -229,14 +229,14 @@ uint8_t* createPICMP(uint8_t* packet, unsigned char *srcHa,
   ipHdr->ip_len=htons(56);      /*total length*/
   ipHdr->ip_id=htons(777);     /*ID*/
   ipHdr->ip_off=htons(IP_DF);      
-  ipHdr->ip_sum =checkSum(ipHdr,20);
+  ipHdr->ip_sum =cksum(ipHdr,20);
   icmpHdr->icmp_type=3;
   icmpHdr->icmp_sum = 0;
   icmpHdr->unused = 0;
   icmpHdr->icmp_code=3;
   icmpHdr->next_mtu = htons(1500);
   memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
-  icmpHdr->icmp_sum = checkSum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
+  icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }
 
@@ -261,7 +261,7 @@ uint8_t* createNICMP(uint8_t* packet, unsigned char *srcHa,
   ipHdr->ip_sum =0;    /*checksum*/
   ipHdr->ip_src =srcIP; 
   ipHdr->ip_dst =destIP; /*src and dest addr*/
-  ipHdr->ip_sum =checkSum(ipHdr,20);
+  ipHdr->ip_sum =cksum(ipHdr,20);
   ipHdr->ip_tos=0;   /*service type*/
   ipHdr->ip_len=htons(56);     /*length*/
   ipHdr->ip_id=htons(777);    /*id*/
@@ -272,7 +272,7 @@ uint8_t* createNICMP(uint8_t* packet, unsigned char *srcHa,
   icmpHdr->icmp_code=0;
   icmpHdr->next_mtu = htons(1500);
   memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
-  icmpHdr->icmp_sum = checkSum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
+  icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }
 
@@ -291,7 +291,7 @@ uint8_t* createEICMP(uint8_t* packet, unsigned int length)
   ipHdr->ip_src = ipHdr->ip_dst;
   ipHdr->ip_dst = tempIP;
   ipHdr->ip_sum = 0;
-  ipHdr->ip_sum = checkSum(ipHdr,20);
+  ipHdr->ip_sum = cksum(ipHdr,20);
   uint8_t* icmp=packet+ sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t);
   uint8_t* type = icmp;
   *type = 0;
@@ -299,26 +299,8 @@ uint8_t* createEICMP(uint8_t* packet, unsigned int length)
   *code = 0;
   uint16_t* sum = (uint16_t*)(code + sizeof(uint8_t));
   *sum = 0;
-  *sum = checkSum(icmp, length- sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
+  *sum = cksum(icmp, length- sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
   return packet;
-}
-
-/*Compute checksum based on formula*/
-uint16_t checkSum (const void *tempData, int length) {
-  const uint8_t *data = tempData;
-  uint32_t sum;
-  for (sum = 0;length >= 2; data += 2, length -= 2)
-    sum += data[0] << 8 | data[1];
-  
-  if (length > 0)
-    sum += data[0] << 8;
-  
-  while (sum > 0xffff)
-    sum = (sum >> 16) + (sum & 0xffff);
-  
-  sum = htons (~sum);
-  
-  return sum ? sum : 0xffff;
 }
 
 /*Match the prefix for routing table*/
@@ -368,7 +350,7 @@ void handleIpPacket(struct sr_instance* srInst, uint8_t* packet,
   uint16_t csum = ipHdr->ip_sum;
   ipHdr->ip_sum = 0;
   
-  if (csum != checkSum((uint8_t*)(packet+sizeof(sr_ethernet_hdr_t)),20))
+  if (csum != cksum((uint8_t*)(packet+sizeof(sr_ethernet_hdr_t)),20))
   {
     fprintf(stderr, "Checksum mismatch\n");
   }
@@ -407,7 +389,7 @@ void handleIpPacket(struct sr_instance* srInst, uint8_t* packet,
 
     ipHdr->ip_ttl--;
     ipHdr->ip_sum = 0;
-  ipHdr->ip_sum = checkSum(ipHdr,20);
+  ipHdr->ip_sum = cksum(ipHdr,20);
   
     if(ipHdr->ip_ttl == 0)
     {

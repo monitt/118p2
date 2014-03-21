@@ -11,6 +11,8 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 
+void handleArp_req(struct sr_instance *sr, struct sr_arpreq* r);
+
 void handleArp_req(struct sr_instance *sr, struct sr_arpreq* r)
 {
     time_t now;

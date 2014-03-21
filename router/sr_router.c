@@ -323,17 +323,17 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
 	uint32_t receiverifip = ntohl(interface->ip);
     struct sr_arpentry* arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
 
-    if(arp_entry == NULL)
+    if(arp_entry != NULL)
     {
-		struct sr_arpreq* a_req = sr_arpcache_queuereq(&(sr->cache), ipHeader->ip_dst, packet, len, inter_p->name);
-		handleArp_req(sr, a_req);
+    memcpy(ethHeader->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
+    memcpy(ethHeader->ether_shost, inter_p->addr, ETHER_ADDR_LEN);
+    sr_send_packet(sr, packet, len, inter_p->name);
+    free(arp_entry);
     }
     else
     {
-		memcpy(ethHeader->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
-		memcpy(ethHeader->ether_shost, inter_p->addr, ETHER_ADDR_LEN);
-		sr_send_packet(sr, packet, len, inter_p->name);
-		free(arp_entry);
+    struct sr_arpreq* a_req = sr_arpcache_queuereq(&(sr->cache), ipHeader->ip_dst, packet, len, inter_p->name);
+    handleArp_req(sr, a_req);
     }
   }
 }

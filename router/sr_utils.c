@@ -7,30 +7,6 @@
 #include "sr_rt.h"
 #include "sr_router.h"
 
-uint8_t* newArpPacket(unsigned short op, unsigned char *sha, uint32_t sip, unsigned char *tha, uint32_t tip)
-{
-  unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-  uint8_t* packet = malloc(len);
-  sr_ethernet_hdr_t* e_hdr = (sr_ethernet_hdr_t*) packet;
-  sr_arp_hdr_t* a_hdr = (sr_arp_hdr_t*) (packet+ sizeof(sr_ethernet_hdr_t));
-  memcpy(e_hdr->ether_dhost, tha, ETHER_ADDR_LEN);
-  memcpy(e_hdr->ether_shost, sha, ETHER_ADDR_LEN);
-  e_hdr->ether_type = htons(ethertype_arp);
-
-  a_hdr->ar_hrd = htons(arp_hrd_ethernet);
-  a_hdr->ar_pro = htons(ethertype_ip);
-  a_hdr->ar_hln = ETHER_ADDR_LEN;
-  a_hdr->ar_pln = 4;
-  a_hdr->ar_op = htons(op);
-  memcpy(a_hdr->ar_sha, sha, ETHER_ADDR_LEN);
-  a_hdr->ar_sip = sip;
-  memcpy(a_hdr->ar_tha, tha, ETHER_ADDR_LEN);
-  a_hdr->ar_tip = tip;
-
-
-  return packet;
-}
-
 uint8_t* newERICMPPacket(uint8_t* packet, unsigned int len)
 {
   sr_ethernet_hdr_t* e_hdr = (sr_ethernet_hdr_t*) packet;

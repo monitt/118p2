@@ -319,9 +319,9 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
 		sr_send_packet(sr, teICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
     }
-
+	struct sr_arpentry* arp_entry;
 	uint32_t receiverifip = ntohl(interface->ip);
-    struct sr_arpentry* arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
+    arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
 
     if(arp_entry != NULL)
     {
@@ -333,7 +333,7 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
     else
     {
     struct sr_arpreq* a_req = sr_arpcache_queuereq(&(sr->cache), ipHeader->ip_dst, packet, len, inter_p->name);
-    handleArp_req(sr, a_req);
+    handle_arpreq(sr, a_req);
     }
   }
 }

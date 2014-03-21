@@ -62,7 +62,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
             sr_send_packet(sr, icmp_message, sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t), currpkt->iface);
             currpkt = currpkt->next;
         }
-        sr_arpreq_destroy(&(sr->cache), request);
+        sr_arpreq_destroy(&(sr->cache), r);
       }
        
       else

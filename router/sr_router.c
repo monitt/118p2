@@ -169,7 +169,7 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 }
 
 /*Fill out ICMP packet*/
-uint8_t* createTICMPPacket(uint8_t* packet, unsigned char *srcHa,
+uint8_t* createTICMPPacket(uint8_t* ipck, unsigned char *srcHa,
       uint32_t srcIP, unsigned char *destHa, uint32_t destIP)
 {
   unsigned int length = sizeof(sr_ethernet_hdr_t) 
@@ -199,13 +199,13 @@ uint8_t* createTICMPPacket(uint8_t* packet, unsigned char *srcHa,
   icmpHdr->icmp_type=11;
   icmpHdr->icmp_code=0;
   icmpHdr->next_mtu = htons(1500);
-  memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
+  memcpy(icmpHdr->data, ipck+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
   icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }
 
 /*Fill out ICMP packet*/
-uint8_t* createPICMP(uint8_t* packet, unsigned char *srcHa, 
+uint8_t* createPICMP(uint8_t* ipck, unsigned char *srcHa, 
       uint32_t srcIP, unsigned char *destHa, uint32_t destIP)
 {
   unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)
@@ -220,14 +220,14 @@ uint8_t* createPICMP(uint8_t* packet, unsigned char *srcHa,
   etHdr->ether_type = htons(ethertype_ip);
   ipHdr->ip_v = 4;
   ipHdr->ip_hl = 5;
-  ipHdr->ip_tos=0;     /*service type*/
-  ipHdr->ip_ttl = 64;     /*TTL*/
-  ipHdr->ip_p = 1;     /*protocol*/
-  ipHdr->ip_sum =0;      /*checksum*/
+  ipHdr->ip_tos=0;     
+  ipHdr->ip_ttl = 64;     
+  ipHdr->ip_p = 1;    
+  ipHdr->ip_sum =0;     
   ipHdr->ip_src =srcIP; 
-  ipHdr->ip_dst =destIP;  /*src and dest*/
-  ipHdr->ip_len=htons(56);      /*total length*/
-  ipHdr->ip_id=htons(777);     /*ID*/
+  ipHdr->ip_dst =destIP;  
+  ipHdr->ip_len=htons(56);    
+  ipHdr->ip_id=htons(777);     
   ipHdr->ip_off=htons(IP_DF);      
   ipHdr->ip_sum =cksum(ipHdr,20);
   icmpHdr->icmp_type=3;
@@ -235,13 +235,13 @@ uint8_t* createPICMP(uint8_t* packet, unsigned char *srcHa,
   icmpHdr->unused = 0;
   icmpHdr->icmp_code=3;
   icmpHdr->next_mtu = htons(1500);
-  memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
+  memcpy(icmpHdr->data, ipck+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
   icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }
 
 /*Fill out ICMP packet*/
-uint8_t* createNICMP(uint8_t* packet, unsigned char *srcHa, 
+uint8_t* createNICMP(uint8_t* ipck, unsigned char *srcHa, 
       uint32_t srcIP, unsigned char *destHa, uint32_t destIP)
 {
   unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) 
@@ -256,22 +256,22 @@ uint8_t* createNICMP(uint8_t* packet, unsigned char *srcHa,
   etHdr->ether_type = htons(ethertype_ip);
   ipHdr->ip_v = 4;
   ipHdr->ip_hl = 5;
-  ipHdr->ip_ttl = 64;     /*ttl*/
-  ipHdr->ip_p = 1;    /*protocol*/
-  ipHdr->ip_sum =0;    /*checksum*/
+  ipHdr->ip_ttl = 64;   
+  ipHdr->ip_p = 1;
+  ipHdr->ip_sum =0;
   ipHdr->ip_src =srcIP; 
-  ipHdr->ip_dst =destIP; /*src and dest addr*/
+  ipHdr->ip_dst =destIP;
   ipHdr->ip_sum =cksum(ipHdr,20);
-  ipHdr->ip_tos=0;   /*service type*/
-  ipHdr->ip_len=htons(56);     /*length*/
-  ipHdr->ip_id=htons(777);    /*id*/
-  ipHdr->ip_off=htons(IP_DF);    /*fragment offset*/
+  ipHdr->ip_tos=0;
+  ipHdr->ip_len=htons(56);
+  ipHdr->ip_id=htons(777);
+  ipHdr->ip_off=htons(IP_DF);
   icmpHdr->icmp_sum = 0;
   icmpHdr->unused = 0;
   icmpHdr->icmp_type=3;
   icmpHdr->icmp_code=0;
   icmpHdr->next_mtu = htons(1500);
-  memcpy(icmpHdr->data, packet+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
+  memcpy(icmpHdr->data, ipck+sizeof(sr_ethernet_hdr_t), ICMP_DATA_SIZE);
   icmpHdr->icmp_sum = cksum(icmpHdr, sizeof(sr_icmp_t3_hdr_t));
   return packet;
 }

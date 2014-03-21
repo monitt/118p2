@@ -81,7 +81,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
         arp_head_request->ar_hln = ETHER_ADDR_LEN;
         arp_head_request->ar_pln = 4;
         arp_head_request->ar_op = ntohs(arp_op_request);
-        arp_head_request->ar_tip = request->ip;
+        arp_head_request->ar_tip = r->ip;
         memcpy(arp_head_request->ar_tha, &floodAddr, ETHER_ADDR_LEN);
 
         while(iface_pt != 0)
@@ -99,7 +99,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 
    }
     
-    r=r->next;        //set to the next req
+    r=r->next;        /*set to the next req*/
  }
 
 }

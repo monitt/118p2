@@ -1,0 +1,27 @@
+Team Members:
+Derong Liang - 404217758
+Jun Ma - 704149452
+Wayne Hong - 803821209
+
+sr_arpcache.c
+===============================================================================
+
+handle_arpreq - Wayne
+sr_arpcache_sweepreqs - Wayne
+
+sr_router.c
+===============================================================================
+
+isAddrEqual - Jun
+isRouterIp - Derong
+get_gw - Derong
+handleArpPacket - Jun/Derong
+handleIpPacket - Jun/Derong
+sr_handlepacket - Jun/Derong
+
+sr_utils.c
+===============================================================================
+
+newArpPacket - Jun
+newERICMPPacket newHUICMPPacket newPUICMPPacket newNUICMPPacket newTEICMPPacket - Jun
+matchPrefix - Derong/Wayne

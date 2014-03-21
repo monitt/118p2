@@ -1,0 +1,50 @@
+Simple Router
+------------------------------------------------------------------
+
+void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* arp_hdr, 
+                        unsigned int len, struct sr_if *iface)
+------------------------------------------------------------------
+This function is called when router received a ARP packet. It first check if the packet is intact, then check the operator in ARP packet and process differently on ARP request and ARP cache.
+
+If it is a ARP request, then the router create a new ARP reply which put its mac address at sorce hardware address part and send it back.
+
+If it is a ARP reply, then the router make the corresponding interface accept the packet and call sr_arpcache_insert function to cache the reply and check the cache if there are packets waiting for this mac address to send out. If no, then do nothing; if yes, then copy this mac address to packet in the waiting list and send them out.
+
+Else return error.
+
+void handleIpPacket(struct sr_instance* sr, uint8_t* packet, 
+                        unsigned int len, struct sr_if *iface)
+------------------------------------------------------------------
+This function get called when the router received an IP packet.It operates differently depending on whether the destination IP is one of the router's interface IP or not.
+
+If the destination IP is one of the router's interface IP, then it checks if the IP protocol is ICMP or not.
+
+If IP protocol is ICMP, it assumes that it would be an echo request, then it generates an echo reply ICMP packet and sends this echo reply packet through the interface which the packet comes from.
+If IP protocol is not ICMP, then it will send out a port unreachable icmp message to the sender.
+
+If the destination IP doesn't belong's to the router,
+it reduce TTL by 1, recalculate the check sum and checks if the TTL is 0. If the TTL is 0, it sends a time exceeded ICMP packet to the sender.Then it would try to match the longest prefix of the destination IP in the routing table. 
+
+If the routing entry is not found, it would send back the sender a network unreachable ICMP packet.
+If the routing entry is found, it would then check if the next hop's MAC address is in the cache, if yes, then routes that packet to next hop.If the cache doesn't exist, it would send out a broadcast ARP request for next hop's IP, and puts that packet to the ARP request's packet queue. 
+
+
+
+void sr_handlepacket(struct sr_instance* sr, uint8_t * packet/* lent */,
+        			unsigned int len, char* interface/* lent */)
+------------------------------------------------------------------
+This function is called every time when any interface of router received a packet. It first check if the packet is intact, then check the type in ethernet header to see if it is ARP or IP packet, and then call corresponding function. It droped packet when the packet didn't match any condition.
+
+void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req)
+------------------------------------------------------------------
+This function handles all instances where the router needs to send an ARP request. Based on the specifications this function ensures that for any given IP requested, an ARP request will be generated at most once per second. Once an ARP request is generated five times with no response for a given IP, the request is destroyed and an ICMP message is sent to each sender of packets addressed to the unresponsive destination. 
+
+The one second limit is implemented using GNU time_t and the five attempt limitation is simply implemented using if-else conditional branching with relavent fields in the request. A linked list of ip addresses is used to keep track of which senders have already been sent an ICMP host unreachable message. This way senders will not receive duplicate ICMP messages for the same unreachable destination. 
+
+ARP request packets are generated using the newArpPacket function which was added to sr_utils.c. This function was given the closest interface address and ip, and told to create an ARP packet with broadcast mac address and the requested ip as target. Each time an Arp request was generated this was recorded by updating the times_sent field in the request structure.
+
+Notably this function does not handle receive ARP packets nor does it send out outstanding IP packets waiting on the address. This functionality is instead handled in handle_packet. 
+
+void sr_arpcache_sweepreqs(struct sr_instance *sr)
+--------------------------------------------------------------------
+This is a very simple function that is used to sweep through all of the requests outstanding in the cache requests list. It is a simple linked list traversal that calls handle_arpreq indiscriminately on all outstanding requests. This function is called once per second by the sr_arpcache_timeout function, which first updates the cache based on the time limit and then calls sr_arpcache_sweepreqs. This loop executes inside a parallel thread that does not impede router functionality separate from the cache. Taken altogether these attributes create a cache that updates every 15 seconds (sr_arpcache_timeout), sends out ARP requests every second (sr_arpcache_sweepreqs), and replies with Host Unreachable ICMP if five unsuccessful attempts have already been made (handle_arpreq). 

@@ -139,7 +139,7 @@ uint8_t* newArpPacket(unsigned short arp_op, unsigned char *arp_sha, uint32_t ar
 }
 
 
-void handleArpRequest(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int len, struct sr_if *interface)
+void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int len, struct sr_if *interface)
 {
 	/*request error*/
 	if ((header->ar_hrd != htons(arp_hrd_ethernet)) || (header->ar_pro != htons(ethertype_ip)) || (header->ar_hln != ETHER_ADDR_LEN) || (header->ar_op != htons(arp_op_request) && header->ar_op != htons(arp_op_reply))){

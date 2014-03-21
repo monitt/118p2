@@ -69,20 +69,6 @@ void sr_init(struct sr_instance* sr)
  *
  *---------------------------------------------------------------------*/
 
-int isAddrEqual(const uint8_t *addr1, const uint8_t *addr2)
-{
-  int i;
-  for(i = 0; i != ETHER_ADDR_LEN; i++)
-  {
-    if (*addr1 != *addr2)
-      return 0;
-    ++addr1;
-    ++addr2;
-  }
-  return 1;
-}
-/*to be implement*/
-
 int isRouterIp(struct sr_instance* sr,uint32_t dstip)
 {
 	struct sr_if* interface_p = sr->if_list;
@@ -279,26 +265,37 @@ void sr_handlepacket(struct sr_instance* sr,
   print_hdrs(packet, len);
   sr_ethernet_hdr_t* ether_hdr = (sr_ethernet_hdr_t*) packet;
   if(len < sizeof(sr_ethernet_hdr_t)) 
-  {
-    fprintf(stderr, "Dropped, too short as ethernet frame\n");
     return;
-  }
+
 
   struct sr_if* iface = sr_get_interface(sr, interface);
   if(ethertype(packet) == ethertype_arp) 
-  {
-        handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), 
-                        len-sizeof(sr_ethernet_hdr_t), iface);
-  }
+     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
+
   else if(ethertype(packet) == ethertype_ip)
   {
-    if(isAddrEqual(ether_hdr->ether_dhost, iface->addr))
+    int i=0;
+    int bool=1;
+    const uint8_t *add1=ether_hdr->ether_dhost; 
+    const uint8_t *add2=iface->addr;
+  while(i != ETHER_ADDR_LEN)
+  {
+    if (*add1 != *add2)
     {
-      handleIpPacket(sr, packet, len, iface);
+      bool= 0;
+      break;
     }
+    ++add1;
+    ++add2;
+    i++;
+  }
+    if(bool)
+      handleIpPacket(sr, packet, len, iface);
+
     else
       fprintf(stderr,"Not for this interface.\n");
   }
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");
+
 }/* end sr_ForwardPacket */

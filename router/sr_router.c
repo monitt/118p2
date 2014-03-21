@@ -215,7 +215,7 @@ uint8_t* t3_icmp(unsigned char *source_mac, unsigned char *dest_mac, uint32_t so
   ipHeader->ip_v = 4;
   ipHeader->ip_hl = 5;
   ipHeader->ip_tos = 0;
-  ipHeader->ip_len = htons(ipLen + imcpLen);
+  ipHeader->ip_len = htons(ipLen + icmpLen);
   ipHeader->ip_id = htons(0);
   ipHeader->ip_off = htons(0);
   ipHeader->ip_ttl = 64;
@@ -269,7 +269,7 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
     else
     {
 		fprintf(stderr, "Port Unreachable\n");
-		uint8_t * puICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dest, 3, 3, packet);
+		uint8_t * puICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dst, 3, 3, packet);
 		print_hdrs(puICMP,70);
 		sr_send_packet(sr,puICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
@@ -303,13 +303,12 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
     if(inter == NULL)
 	{
 		fprintf(stderr, "Net Unreachable\n");
-		struct sr_if* inter_p = NULL;
-		uint8_t * nuICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dest, 3, 0, packet);
+		uint8_t * nuICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dst, 3, 0, packet);
 		sr_send_packet(sr, nuICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
 	}
     else
-		struct sr_if* inter_p = sr_get_interface(sr, inter);
+		struct sr_if * inter_p = sr_get_interface(sr, inter);
 
 
     ipHeader->ip_ttl -= 1;
@@ -317,7 +316,7 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
     if(ipHeader->ip_ttl == 0)
     {
 		fprintf(stderr, "Time to Live exceeded in Transit\n");
-		uint8_t* teICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dest, 11, 0, packet);
+		uint8_t* teICMP = t3_icmp(ethHeader->ether_shost, ethHeader->ether_dhost, ipHeader->ip_src, ipHeader->ip_dst, 11, 0, packet);
 		sr_send_packet(sr, teICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
     }

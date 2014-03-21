@@ -286,4 +286,3 @@ void sr_handlepacket(struct sr_instance* sr,
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");
 }/* end sr_ForwardPacket */
-

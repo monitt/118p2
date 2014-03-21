@@ -103,7 +103,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
  while(r!=NULL)  /*loops the linked list till all reqs are complete*/
  {
     /*handle*/
-   handleArp_req(sr, r);
+   handle_arpreq(sr, r);
    
     r=r->next;        /*set to the next req*/
  }

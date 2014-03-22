@@ -96,7 +96,7 @@ uint8_t* newArpPacket(unsigned short arp_op, unsigned char *arp_sha, uint32_t ar
 }
 
 void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int len, struct sr_if *interface)
-{printf("11111");
+{printf("in ARP");
 	/*request error*/
 	if ((header->ar_hrd != htons(arp_hrd_ethernet)) || (header->ar_pro != htons(ethertype_ip)) || (header->ar_hln != ETHER_ADDR_LEN) || (header->ar_op != htons(arp_op_request) && header->ar_op != htons(arp_op_reply))){
 		fprintf(stderr, "Bad request.\n");
@@ -104,7 +104,6 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 	}
 	/*ARP request*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_request)))	{
-	printf("2222");
 		uint8_t* buf = newArpPacket(arp_op_reply, interface->addr, header->ar_tip, header->ar_sha, header->ar_sip);
 		unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_arp_hdr_t);
 		sr_send_packet(sr,buf, len, interface->name);
@@ -118,7 +117,6 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 	}
 	/*ARP reply*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_reply)))	{	
-	printf("33333");
 		struct sr_arpreq* request = sr_arpcache_insert(&sr->cache, header->ar_sha, header->ar_sip);
 		do	{
 			struct sr_packet* pack = request->packets;
@@ -133,14 +131,13 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 			fprintf(stderr, "No more requests.\n");
 		}
 		sr_arpreq_destroy(&(sr->cache),request);
-		printf("44444");
 	}
 	else 
 	{
 		fprintf(stderr, "Call error.");
 		return;
 	}
-
+printf("out ARP");
 }
 
 uint8_t*  reply_icmp(uint8_t* packet, unsigned int len)
@@ -214,7 +211,7 @@ uint8_t* t3_icmp(unsigned char *source_mac, unsigned char *dest_mac, uint32_t so
 }
 
 void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, struct sr_if *interface)	{
-  
+  printf("in IP");
   sr_ethernet_hdr_t* ethHeader = (sr_ethernet_hdr_t*) packet;
   sr_ip_hdr_t* ipHeader = (sr_ip_hdr_t*) (packet+sizeof(sr_ethernet_hdr_t));
   
@@ -312,13 +309,14 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
     handle_arpreq(sr, a_req);
     }
   }
+  printf("out IP");
 }
 
 void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */)
-{
+{printf("in handlePack");
   /* REQUIRES */
   assert(sr);
   assert(packet);
@@ -354,16 +352,14 @@ void sr_handlepacket(struct sr_instance* sr,
     ++add2;
     i++;
   }
-  printf("im here");
-    if(bool) {
-		printf("and here");
+
+    if(bool)
       handleIpPacket(sr, packet, len, iface);
-	  printf("but not here");
-	}
+
     else
       fprintf(stderr,"Not for this interface.\n");
   }
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");
-
+printf("out handlePack");
 }/* end sr_ForwardPacket */

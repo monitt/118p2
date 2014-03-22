@@ -135,7 +135,7 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 		{
 			fprintf(stderr, "No more requests.\n");
 		}
-		sr_arpreq_destroy(&(sr->cache),request);
+		
 		printf("outta ARP...2\n");
 	}
 	else 

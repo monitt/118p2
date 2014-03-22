@@ -329,9 +329,9 @@ void sr_handlepacket(struct sr_instance* sr,
 
  printf("*** 111111");
   struct sr_if* iface = sr_get_interface(sr, interface);
-  if(ethertype(packet) == ethertype_arp) 
-     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
- printf("*** 22222");
+  if(ethertype(packet) == ethertype_arp) {
+     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface); printf("*** 22222");
+ }
   else if(ethertype(packet) == ethertype_ip)
   {
     int i=0;

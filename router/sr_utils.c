@@ -123,7 +123,6 @@ void print_hdr_icmp(uint8_t *buf) {
 
 /* Prints out fields in ARP header */
 void print_hdr_arp(uint8_t *buf) {
-	printf("in ARPprint");
   sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(buf);
   fprintf(stderr, "ARP header\n");
   fprintf(stderr, "\thardware type: %d\n", ntohs(arp_hdr->ar_hrd));
@@ -141,12 +140,11 @@ void print_hdr_arp(uint8_t *buf) {
   print_addr_eth(arp_hdr->ar_tha);
   fprintf(stderr, "\ttarget ip address: ");
   print_addr_ip_int(ntohl(arp_hdr->ar_tip));
-  printf("out ARPprint");
 }
 
 /* Prints out all possible headers, starting from Ethernet */
 void print_hdrs(uint8_t *buf, uint32_t length) {
-printf("in ALLprint");
+
   /* Ethernet */
   int minlength = sizeof(sr_ethernet_hdr_t);
   if (length < minlength) {
@@ -185,6 +183,5 @@ printf("in ALLprint");
   else {
     fprintf(stderr, "Unrecognized Ethernet Type: %d\n", ethtype);
   }
-  printf("out ALLprint");
 }
 

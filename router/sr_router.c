@@ -120,7 +120,6 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 	/*ARP reply*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_reply)))	{	
 		printf("in ARP...2\n");
-		int i = 1;
 
 		struct sr_arpreq* request = sr_arpcache_insert(&sr->cache, header->ar_sha, header->ar_sip);
 		if (request != NULL)	{
@@ -132,8 +131,8 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 				memcpy(next_eth->ether_shost, header->ar_tha, ETHER_ADDR_LEN);
 				memcpy(next_eth->ether_dhost, header->ar_sha, ETHER_ADDR_LEN);
 				printf("no means yes\n");
-				sr_send_packet(sr, pack->buf, sizeof(sr_ethernet_hdr_t), pack->iface);
-				request->packets = pack->next;
+				sr_send_packet(sr, pack->buf, pack->len, interface);
+				pack = pack->next;
 				
 			}
 		}

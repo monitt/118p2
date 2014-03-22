@@ -123,17 +123,19 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 		int i = 1;
 
 		struct sr_arpreq* request = sr_arpcache_insert(&sr->cache, header->ar_sha, header->ar_sip);
-		
-		while(request != NULL)	{
-			
+		if (request != NULL)	{
 			struct sr_packet* pack = request->packets;
-			printf("is it here\n");
-			memcpy(((sr_ethernet_hdr_t*)pack->buf)->ether_shost, header->ar_tha, ETHER_ADDR_LEN);
-			memcpy(((sr_ethernet_hdr_t*)pack->buf)->ether_dhost, header->ar_sha, ETHER_ADDR_LEN);
-			printf("no means yes\n");
-			sr_send_packet(sr, pack->buf, sizeof(sr_ethernet_hdr_t), pack->iface);
-			request->packets = pack->next;
 			
+			while(pack != NULL)	{
+				sr_ethernet_hdr_t * next_eth = (sr_ethernet_hdr_t *) pack->buf;
+				printf("is it here\n");
+				memcpy(next_eth->ether_shost, header->ar_tha, ETHER_ADDR_LEN);
+				memcpy(next_eth->ether_dhost, header->ar_sha, ETHER_ADDR_LEN);
+				printf("no means yes\n");
+				sr_send_packet(sr, pack->buf, sizeof(sr_ethernet_hdr_t), pack->iface);
+				request->packets = pack->next;
+				
+			}
 		}
 		if (request == NULL)
 		{

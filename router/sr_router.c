@@ -329,12 +329,14 @@ void sr_handlepacket(struct sr_instance* sr,
 
 
   struct sr_if* iface = sr_get_interface(sr, interface);
-  if(ethertype(packet) == ethertype_arp) 
+  if(ethertype(packet) == ethertype_arp) {
+	printf("in 1");
     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
-
+	printf("outta 1");
+}
   else if(ethertype(packet) == ethertype_ip)
   {
-	printf("in here");
+	printf("in 2");
 	  int i=0;
 	  int bool=1;
 	  const uint8_t *add1=ether_hdr->ether_dhost; 
@@ -356,7 +358,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
       else
 		fprintf(stderr,"Not for this interface.\n");
-	printf("outta here");
+	printf("outta 2");
   }
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");

@@ -1,27 +1,30 @@
 Team Members:
-Derong Liang - 404217758
-Jun Ma - 704149452
-Wayne Hong - 803821209
+Tarun Gotimukala - 504063821
+Monit Tyagi - 903899797
+Trevor Humphreys - 
 
 sr_arpcache.c
 ===============================================================================
 
-handle_arpreq - Wayne
-sr_arpcache_sweepreqs - Wayne
+sr_arpcache_sweepreqs function was worked by Tarun Gotimukala. All the implementation is in the function itself.
+Did not take create any helper or subfunctions of any sort. The function take takes gets the request supplied from
+the argument and then sweeps through all the requests and works on each one at a time. Simple straight forward implementation
 
-sr_router.c
+
+In the sr_router.c file
 ===============================================================================
 
-isAddrEqual - Jun
-isRouterIp - Derong
-get_gw - Derong
-handleArpPacket - Jun/Derong
-handleIpPacket - Jun/Derong
-sr_handlepacket - Jun/Derong
+HandleArpRequest - Monit Tyagi
+newArpRequest - Monit Tyagi
+The two functions take care of getting sending and gather the response from the ArpRequest to the hosts. 
 
-sr_utils.c
-===============================================================================
+reply_icmp - Monit Tyagi
+t3_icmp - Monit Tyagi
 
-newArpPacket - Jun
-newERICMPPacket newHUICMPPacket newPUICMPPacket newNUICMPPacket newTEICMPPacket - Jun
-matchPrefix - Derong/Wayne
+The above functions are created as helper functions for the handleIpPacket.
+handleIpPacket - Monit Tyagi
+The above functions handles the Ip reqs and takes care of getting the necessary details by forwarding it appropriately. 
+
+sr_handlepacket - Tarun Gotimukala. 
+sr_handlepacket details the requests and sees the type and sends them to the previous two functions Arp and IP appropriately. 
+

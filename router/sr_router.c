@@ -97,7 +97,6 @@ uint8_t* newArpPacket(unsigned short arp_op, unsigned char *arp_sha, uint32_t ar
 
 void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int len, struct sr_if *interface)
 {
-	printf("in ARP\n");
 	/*request error*/
 	if ((header->ar_hrd != htons(arp_hrd_ethernet)) || (header->ar_pro != htons(ethertype_ip)) || (header->ar_hln != ETHER_ADDR_LEN) || (header->ar_op != htons(arp_op_request) && header->ar_op != htons(arp_op_reply))){
 		fprintf(stderr, "Bad request.\n");
@@ -105,7 +104,6 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 	}
 	/*ARP request*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_request)))	{
-		printf("in ARP...1\n");
 		uint8_t* buf = newArpPacket(arp_op_reply, interface->addr, header->ar_tip, header->ar_sha, header->ar_sip);
 		unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_arp_hdr_t);
 		sr_send_packet(sr,buf, len, interface->name);
@@ -115,22 +113,17 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 		fprintf(stderr, "Headers:\n");
 		print_hdrs(buf,sizeof(sr_ethernet_hdr_t)+sizeof(sr_arp_hdr_t));
 		free(buf);
-		printf("outta ARP...1\n");
 	}
 	/*ARP reply*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_reply)))	{	
-		printf("in ARP...2\n");
-
 		struct sr_arpreq* request = sr_arpcache_insert(&sr->cache, header->ar_sha, header->ar_sip);
 		if (request != NULL)	{
 			struct sr_packet* pack = request->packets;
 			
 			while(pack != NULL)	{
 				sr_ethernet_hdr_t * next_eth = (sr_ethernet_hdr_t *) pack->buf;
-				printf("is it here\n");
 				memcpy(next_eth->ether_shost, header->ar_tha, ETHER_ADDR_LEN);
 				memcpy(next_eth->ether_dhost, header->ar_sha, ETHER_ADDR_LEN);
-				printf("no means yes\n");
 				sr_send_packet(sr, pack->buf, pack->len, interface);
 				pack = pack->next;
 				
@@ -140,15 +133,12 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 		{
 			fprintf(stderr, "No more requests.\n");
 		}
-		
-		printf("outta ARP...2\n");
 	}
 	else 
 	{
 		fprintf(stderr, "Call error.");
 		return;
 	}
-	printf("outta ARP\n");
 }
 
 uint8_t*  reply_icmp(uint8_t* packet, unsigned int len)
@@ -325,7 +315,7 @@ void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */)
-{printf("in handlePack\n");
+{
   /* REQUIRES */
   assert(sr);
   assert(packet);
@@ -334,9 +324,7 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
 
   /* fill in code here */
-  printf("start printing\n");
   print_hdrs(packet, len);
-  printf("done printing\n");
   sr_ethernet_hdr_t* ether_hdr = (sr_ethernet_hdr_t*) packet;
   if(len < sizeof(sr_ethernet_hdr_t)) 
     return;
@@ -344,13 +332,10 @@ void sr_handlepacket(struct sr_instance* sr,
 
   struct sr_if* iface = sr_get_interface(sr, interface);
   if(ethertype(packet) == ethertype_arp) {
-	printf("in 1\n");
     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
-	printf("outta 1\n");
 }
   else if(ethertype(packet) == ethertype_ip)
   {
-	printf("in 2");
 	  int i=0;
 	  int bool=1;
 	  const uint8_t *add1=ether_hdr->ether_dhost; 
@@ -372,9 +357,8 @@ void sr_handlepacket(struct sr_instance* sr,
 
       else
 		fprintf(stderr,"Not for this interface.\n");
-	printf("outta 2\n");
   }
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");
-printf("out handlePack\n");
+
 }/* end sr_ForwardPacket */

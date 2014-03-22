@@ -12,7 +12,7 @@
 #include "sr_protocol.h"
 
 
-void handle_arpreq(struct sr_instance *sr, struct sr_arpreq* r)
+void handle_arpreq(struct sr_instance *sr, struct sr_arpreq* request)
 {
 time_t now;
     time(&now);

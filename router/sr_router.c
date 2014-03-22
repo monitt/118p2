@@ -332,12 +332,11 @@ void sr_handlepacket(struct sr_instance* sr,
   if(len < sizeof(sr_ethernet_hdr_t)) 
     return;
 
-printf("im here");
+
   struct sr_if* iface = sr_get_interface(sr, interface);
   if(ethertype(packet) == ethertype_arp) 
-   {  printf("and here"); handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
-   printf("not here though");
-}
+     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
+
   else if(ethertype(packet) == ethertype_ip)
   {
     int i=0;
@@ -355,9 +354,12 @@ printf("im here");
     ++add2;
     i++;
   }
-    if(bool)
+  printf("im here");
+    if(bool) {
+		printf("and here");
       handleIpPacket(sr, packet, len, iface);
-
+	  printf("but not here");
+	}
     else
       fprintf(stderr,"Not for this interface.\n");
   }

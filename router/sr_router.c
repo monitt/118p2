@@ -69,35 +69,6 @@ void sr_init(struct sr_instance* sr)
  *
  *---------------------------------------------------------------------*/
 
-int isRouterIp(struct sr_instance* sr,uint32_t dstip)
-{
-	struct sr_if* interface_p = sr->if_list;
-	while(interface_p!=NULL)
-	{
-		if(interface_p->ip == dstip)
-			return 1;
-		interface_p = interface_p->next;
-	}
-	return 0;
-}
-
-uint32_t get_gw(struct sr_instance* sr,char * name)
-{
-	struct sr_rt* rt_p = sr->routing_table;
-	for(;rt_p!=NULL;rt_p = rt_p->next)
-	{
-		int i;
-		for(i=0;i<sr_IFACE_NAMELEN;i++)
-		{
-			if((*(name+i)) != (*((rt_p->interface)+i)))
-				break;
-		}
-		if(i == sr_IFACE_NAMELEN)
-			return rt_p->gw.s_addr;
-	}
-	return 0;
-}
-
 uint8_t* newArpPacket(unsigned short arp_op, unsigned char *arp_sha, uint32_t arp_sip, unsigned char *arp_tha, uint32_t arp_tip)
 {
 	/*ethernet header + arp header*/

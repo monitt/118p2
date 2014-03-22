@@ -313,7 +313,7 @@ void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */)
-{printf("in handlePack");
+{printf("in handlePack\n");
   /* REQUIRES */
   assert(sr);
   assert(packet);
@@ -322,7 +322,9 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
 
   /* fill in code here */
+  printf("start printing\n");
   print_hdrs(packet, len);
+  printf("done printing\n");
   sr_ethernet_hdr_t* ether_hdr = (sr_ethernet_hdr_t*) packet;
   if(len < sizeof(sr_ethernet_hdr_t)) 
     return;
@@ -330,9 +332,9 @@ void sr_handlepacket(struct sr_instance* sr,
 
   struct sr_if* iface = sr_get_interface(sr, interface);
   if(ethertype(packet) == ethertype_arp) {
-	printf("in 1");
+	printf("in 1\n");
     handleArpPacket(sr, (sr_arp_hdr_t* )(packet+sizeof(sr_ethernet_hdr_t)), len-sizeof(sr_ethernet_hdr_t), iface);
-	printf("outta 1");
+	printf("outta 1\n");
 }
   else if(ethertype(packet) == ethertype_ip)
   {
@@ -358,9 +360,9 @@ void sr_handlepacket(struct sr_instance* sr,
 
       else
 		fprintf(stderr,"Not for this interface.\n");
-	printf("outta 2");
+	printf("outta 2\n");
   }
   else
     fprintf(stderr, "Dropped, wrong entertype.\n");
-printf("out handlePack");
+printf("out handlePack\n");
 }/* end sr_ForwardPacket */

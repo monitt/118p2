@@ -319,9 +319,9 @@ void handleIpPacket(struct sr_instance* sr, uint8_t* packet, unsigned int len, s
 		sr_send_packet(sr, teICMP, sizeof(sr_icmp_t3_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_ethernet_hdr_t), interface->name);
 		return;
     }
-	struct sr_arpentry* arp_entry;
+
 	uint32_t receiverifip = ntohl(interface->ip);
-    arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
+    struct sr_arpentry* arp_entry = sr_arpcache_lookup(&sr->cache, receiverifip);
 
     if(arp_entry != NULL)
     {

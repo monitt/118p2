@@ -108,7 +108,7 @@ struct sr_arpcache {
 };
 
 /* Handles an arp request, sending it or removing it (once per second) */
-void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *request);
+void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *r);
 
 /* Checks if an IP->MAC mapping is in the cache. IP is in network byte order. 
    You must free the returned structure if it is not NULL. */

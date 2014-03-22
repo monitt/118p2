@@ -12,98 +12,86 @@
 #include "sr_protocol.h"
 
 
-void handle_arpreq(struct sr_instance *sr, struct sr_arpreq* request)
+void handle_arpreq(struct sr_instance *sr, struct sr_arpreq* r)
 {
-time_t now;
+    time_t now;
     time(&now);
-    if(difftime(now, request->sent) > 1.0){
-    if(request->times_sent >= 5){
-        /*Things that need to be changed:dest mac, src mac,  src ip, dest ip*/
-        struct sr_packet* current = request->packets;
-       while(current != 0){ 
-        
-       int eth_head_len = sizeof(sr_ethernet_hdr_t);   
-       int ip_head_len = sizeof(sr_ip_hdr_t);
-       sr_ethernet_hdr_t* init_eth = (sr_ethernet_hdr_t*) (current->buf);
-       sr_ip_hdr_t* init_ip =  (sr_ip_hdr_t*) (current->buf + eth_head_len);
+    if(difftime(now, r->sent) > 1) /* if the time difference obtained is greater than 1 sec */
+    {
+      if(r->times_sent >= 5)  /*and more than req is sent more than 5 times*/
+      {
+        struct sr_packet* currpkt = r->packets;
+        while(currpkt!=NULL)
+        {
+            sr_ethernet_hdr_t* eth_hdr = (sr_ethernet_hdr_t*) currpkt->buf;
+            sr_ip_hdr_t* iphdr = (sr_ip_hdr_t*) (currpkt->buf+sizeof(sr_ethernet_hdr_t));
 
-       uint8_t *icmp_message = calloc(eth_head_len + ip_head_len + sizeof(sr_icmp_t3_hdr_t), sizeof(uint8_t));
-       sr_ethernet_hdr_t * eth_head_icmp = (sr_ethernet_hdr_t*) icmp_message;
-       sr_ip_hdr_t * ip_head_icmp = (sr_ip_hdr_t*)(icmp_message + eth_head_len);
-       sr_icmp_t3_hdr_t * icmp_head_icmp = (sr_icmp_t3_hdr_t*)(icmp_message + eth_head_len + ip_head_len);
+            uint8_t *icmsg = calloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t), sizeof(uint8_t));
+            sr_ethernet_hdr_t * Ehead_icmp = (sr_ethernet_hdr_t*) icmsg;
+            sr_ip_hdr_t * IpHead_icmp = (sr_ip_hdr_t*)(icmsg + sizeof(sr_ethernet_hdr_t));
+            sr_icmp_t3_hdr_t * Headicmp = (sr_icmp_t3_hdr_t*)(icmsg + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
+            Ehead_icmp->ether_type = ntohs(ethertype_ip);
+            memcpy(Ehead_icmp->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
+            memcpy(Ehead_icmp->ether_shost, sr_get_interface(sr,currpkt->iface)->addr, ETHER_ADDR_LEN);
             
-        eth_head_icmp->ether_type = ntohs(ethertype_ip);
-        memcpy(eth_head_icmp->ether_dhost, init_eth->ether_shost, ETHER_ADDR_LEN);
-        memcpy(eth_head_icmp->ether_shost, sr_get_interface(sr,current->iface)->addr, ETHER_ADDR_LEN);
-            
-        ip_head_icmp->ip_hl = 5; /*number of 4 byte in the header*/
-        ip_head_icmp->ip_v = 4;
-	ip_head_icmp->ip_tos = htonl(0);
-	ip_head_icmp->ip_len = htons(ip_head_len + sizeof(sr_icmp_t3_hdr_t));
-	ip_head_icmp->ip_id = 0;
-	ip_head_icmp->ip_off = 0;
-        ip_head_icmp->ip_ttl = 255; /*big ttl*/
-        ip_head_icmp->ip_p = 0x01;
-        ip_head_icmp->ip_src = sr_get_interface(sr, current->iface)->ip; /* check this */
-        ip_head_icmp->ip_dst = init_ip->ip_src;
-	ip_head_icmp->ip_sum = cksum(ip_head_icmp, ip_head_icmp->ip_hl*4);  
+            IpHead_icmp->ip_hl = 5; 
+            IpHead_icmp->ip_v = 4;
+            IpHead_icmp->ip_tos = htonl(0);
+            IpHead_icmp->ip_len = htons(sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
+            IpHead_icmp->ip_id = 0;
+            IpHead_icmp->ip_off = 0;
+            IpHead_icmp->ip_ttl = 255; 
+            IpHead_icmp->ip_p = 1;
+            IpHead_icmp->ip_src = sr_get_interface(sr, currpkt->iface)->ip; 
+            IpHead_icmp->ip_dst = iphdr->ip_src;
+            IpHead_icmp->ip_sum = cksum(IpHead_icmp, 20);  
+            Headicmp->icmp_type = 3;
+            Headicmp->icmp_code = 1;
        
-	 icmp_head_icmp->icmp_type = 0x03;
-        icmp_head_icmp->icmp_code = 0x01;
-        memcpy(icmp_head_icmp->data, init_ip, init_ip->ip_hl*4 + 8);
+            memcpy(Headicmp->data, iphdr, ICMP_DATA_SIZE);
+            Headicmp->icmp_sum = cksum(Headicmp, sizeof(sr_icmp_t3_hdr_t));
 
-  
-	icmp_head_icmp->icmp_sum = cksum(icmp_head_icmp, sizeof(sr_icmp_t3_hdr_t));
-        /* + copy over data if any?*/
-
-        sr_send_packet(sr, icmp_message, eth_head_len + ip_head_len + sizeof(sr_icmp_t3_hdr_t), current->iface);
-        current = current->next;
+            sr_send_packet(sr, icmsg, sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t), currpkt->iface);
+            currpkt = currpkt->next;
         }
-        /*send icmp host unreachable to source addr of all pkts waiting */
-             
-        sr_arpreq_destroy(&(sr->cache), request);
-    }
-    else{
-/*      ip addresses are in little endian make sure to print them
-        send arp request to all interfaces*/
-        struct sr_if * iface_pt = sr->if_list;
-        uint8_t * arp_request = calloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t),sizeof(uint8_t));
-        sr_ethernet_hdr_t * eth_head_request = (sr_ethernet_hdr_t*) arp_request;
-        sr_arp_hdr_t * arp_head_request = (sr_arp_hdr_t *) (arp_request + sizeof(sr_ethernet_hdr_t)); 
+        sr_arpreq_destroy(&(sr->cache), r);
+      }
+       
+      else
+      {
+        struct sr_if * ptr_iface = sr->if_list;
+        uint8_t * arp_req = calloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t),sizeof(uint8_t));
+        sr_ethernet_hdr_t * Ehead_req = (sr_ethernet_hdr_t*) arp_req;
+        sr_arp_hdr_t * arpHead_req = (sr_arp_hdr_t *) (arp_req + sizeof(sr_ethernet_hdr_t)); 
 
-        eth_head_request->ether_type = ntohs(ethertype_arp); 
+        Ehead_req->ether_type = ntohs(ethertype_arp); 
         unsigned long floodAddr = 0xFFFFFFFFFFFF; 
-        memcpy(eth_head_request->ether_dhost, &floodAddr, ETHER_ADDR_LEN);
+        memcpy(Ehead_req->ether_dhost, &floodAddr, ETHER_ADDR_LEN);
+        arpHead_req->ar_hrd = ntohs(arp_hrd_ethernet);
+        arpHead_req->ar_pro = ntohs(ethertype_ip);
+        arpHead_req->ar_hln = ETHER_ADDR_LEN;
+        arpHead_req->ar_pln = 4;
+        arpHead_req->ar_op = ntohs(arp_op_request);
+        arpHead_req->ar_tip = r->ip;
+        memcpy(arpHead_req->ar_tha, &floodAddr, ETHER_ADDR_LEN);
 
-            arp_head_request->ar_hrd = ntohs(arp_hrd_ethernet);
-        arp_head_request->ar_pro = ntohs(ethertype_ip);
-        arp_head_request->ar_hln = 6;
-        arp_head_request->ar_pln = 4;
-        arp_head_request->ar_op = ntohs(arp_op_request);
-        arp_head_request->ar_tip = request->ip;
-        memcpy(arp_head_request->ar_tha, &floodAddr, ETHER_ADDR_LEN);
-
-            while(iface_pt != 0){
-        memcpy(eth_head_request->ether_shost, iface_pt->addr, ETHER_ADDR_LEN);
-        memcpy(arp_head_request->ar_sha, eth_head_request->ether_shost, ETHER_ADDR_LEN);
-        arp_head_request->ar_sip = iface_pt->ip;
-        /*printf("-------\n SENDING ARP REQUEST: \n");
-        printf("Looking for: \n");
-        print_addr_ip_int(ntohl(arp_head_request->ar_tip));
-        printf("From: \n");
-        print_addr_ip_int(ntohl(arp_head_request->ar_sip));
-        printf("Mac Flood Addr:\n");
-        print_addr_eth(eth_head_request->ether_dhost);
-        printf("------\n");*/
-        sr_send_packet(sr, arp_request, sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), iface_pt->name);
-    /*  printf("Sending Succeeded\n"); */
-        iface_pt = iface_pt->next;
+        while(ptr_iface != 0)
+        {
+        memcpy(Ehead_req->ether_shost, ptr_iface->addr, ETHER_ADDR_LEN);
+        memcpy(arpHead_req->ar_sha, Ehead_req->ether_shost, ETHER_ADDR_LEN);
+        arpHead_req->ar_sip = ptr_iface->ip;
+        sr_send_packet(sr, arp_req, sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), ptr_iface->name);
+        ptr_iface = ptr_iface->next;
         }
-       /*printf("Done With Interfaces\n");*/
-        request->sent = now;
-        request->times_sent++;
-    }
-    }
+        r->sent = now;
+        r->times_sent=r->times_sent+1;
+
+      }
+
+   }
+    
+
 }
 /* 
   This function gets called every second. For each request sent out, we keep

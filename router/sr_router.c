@@ -107,17 +107,17 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 		uint8_t* buf = newArpPacket(arp_op_reply, interface->addr, header->ar_tip, header->ar_sha, header->ar_sip);
 		unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_arp_hdr_t);
 		sr_send_packet(sr,buf, len, interface->name);
-		print("11111");
+		printf("11111");
 		fprintf(stderr, "IP:\n");
 		print_addr_ip_int(interface->ip);
 		fprintf(stderr, "Headers:\n");
 		print_hdrs(buf,sizeof(sr_ethernet_hdr_t)+sizeof(sr_arp_hdr_t));
 		free(buf);
-		print("2222");
+		printf("2222");
 	}
 	/*ARP reply*/
 	else if ((interface->ip == header->ar_tip) && (header->ar_op == htons(arp_op_reply)))	{	
-	print("33333");
+	printf("33333");
 		struct sr_arpreq* request = sr_arpcache_insert(&sr->cache, header->ar_sha, header->ar_sip);
 		do	{
 			struct sr_packet* pack = request->packets;
@@ -132,7 +132,7 @@ void handleArpPacket(struct sr_instance* sr, sr_arp_hdr_t* header, unsigned int 
 			fprintf(stderr, "No more requests.\n");
 		}
 		sr_arpreq_destroy(&(sr->cache),request);
-		print("44444");
+		printf("44444");
 	}
 	else 
 	{
